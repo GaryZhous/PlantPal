@@ -1,4 +1,6 @@
 #include <Arduino.h>
+#include <SPI.h>
+#include <Ethernet.h>
 
 // put function declarations here:
 int myFunction(int, int);
