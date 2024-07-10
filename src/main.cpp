@@ -9,8 +9,6 @@
   #define PASSWORD       "<WIFI-password>"
   #define SMTP_USERNAME  "<your_email@example.com>"
   #define SMTP_PASSWORD  "<your_generated_app_password>"
-#else
-  #include "secret.h"
 #endif
 
 ArduinoLEDMatrix matrix;
@@ -41,6 +39,15 @@ const char* emailRecipient = "recipient_email@gmail.com";
 void setup() {
   Serial.begin(115200);
   matrix.begin();
+  char*& user_email = const_cast<char*&>(emailRecipient); //cast off the const type for future use
+  // Connect to WiFi
+  WiFi.begin(SSID, PASSWORD);
+  Serial.print("Connecting to WiFi...");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("Connected!");
 }
 
 void loop() {
@@ -51,16 +58,7 @@ void loop() {
 }
 
 // Function to send an email
-void sendEmail(const char* emailSubject, const char* emailMessage) {
-
-  // Connect to WiFi
-  WiFi.begin(SSID, PASSWORD);
-  Serial.print("Connecting to WiFi...");
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("Connected!");
+void sendEmail(const char* emailRecipient, const char* emailSubject, const char* emailMessage) {
 
   // Initialize SMTP session
   SMTPSession smtp;
@@ -110,6 +108,6 @@ void smtpCallback(SMTP_Status status) {
   }
 }
 
-String operator+(const String& a, const String& b) {
+String operator+(const String& a, const String& b) { //the String class for Arduino is only half done...
     return a + b;
 }
