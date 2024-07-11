@@ -4,7 +4,7 @@
 #include <ESP_Mail_Client.h>
 #include "Arduino_LED_Matrix.h"
 
-#if !__has_include("secret.h")
+#if __has_include("secret.h")
   #define SSID           "<WIFI-SSID>"
   #define PASSWORD       "<WIFI-password>"
   #define SMTP_USERNAME  "<your_email@example.com>"
