@@ -2,6 +2,7 @@
 #include <SPI.h>
 #include <WiFi.h>
 #include <Arduino_LED_Matrix.h>
+#include <DHT_U.h>
 
 #ifdef __has_include
     #if !__has_include("config.hpp")
@@ -11,27 +12,17 @@
 
 #include "config.hpp"
 #include "util/mail.hpp"
+#include "util/relay.hpp"
+#include "util/led_symbols.hpp"
+#include "sensor/soil_moisture.hpp"
 
 #define TEST
 ArduinoLEDMatrix matrix;
 
-const uint32_t heart[] = { //LED grid testing array
-    0x3184a444,
-    0x44042081,
-    0x100a0040
-};
-
-const uint32_t off[3] = {0};
-
-void LEDTest(){
-    matrix.loadFrame(heart);
-    delay(1000);
-    matrix.loadFrame(off);
-    delay(1000);
-}
-
-// Recipient email
 Mail mail(conf::SMTP_SERVER, conf::SMTP_PORT, conf::SMTP_USERNAME, conf::SMTP_PASSWORD);
+Relay pump_relay(conf::RELAY_PIN);
+SoilMoistureSensor soil_moisture(conf::SOIL_MOISTURE_SENSOR_PIN);
+DHT_Unified dht(conf::DHT_SENSOR_PIN, DHT22);
 
 void setup() {
     Serial.begin(115200);
@@ -45,6 +36,25 @@ void setup() {
         Serial.print(".");
     }
     Serial.println("Connected!");
+
+    pump_relay.setup();
+    soil_moisture.setup();
+    dht.begin();
+
+    matrix.loadFrame(led_symbols::hi);
+    delay(250);
+    matrix.loadFrame(led_symbols::heart);
+    delay(250);
+    matrix.loadFrame(led_symbols::dry);
+    delay(250);
+    matrix.loadFrame(led_symbols::cold);
+    delay(250);
+    matrix.loadFrame(led_symbols::hot);
+    delay(250);
+    matrix.loadFrame(led_symbols::ok);
+    delay(250);
+    matrix.loadFrame(led_symbols::hi);
+    delay(3000);
 }
 
 void test_send() {
@@ -60,12 +70,38 @@ void test_send() {
     }
 }
 
+int loop_num = 0;
 void loop() {
-    // put your main code here, to run repeatedly:
     #ifdef TEST
-        LEDTest();
-        test_send();
+        // test_send();
     #endif
+
+    double moisture = soil_moisture.read();
+
+    if (moisture > conf::SOIL_DRY_THRESHOLD) {
+        matrix.loadFrame(led_symbols::dry);
+        pump_relay.close();
+    }
+    else if (moisture < conf::SOIL_WET_THRESHOLD) {
+        matrix.loadFrame(led_symbols::ok);
+        pump_relay.open();
+    }
+
+    if (loop_num % 25 == 0) {    // run every 2.5 s
+        Serial.println("---");
+
+        Serial.print("Soil moisture: "); Serial.println(moisture, 4);
+
+        sensors_event_t dht_event;
+        dht.temperature().getEvent(&dht_event);
+        Serial.print("Temperature: "); Serial.print(dht_event.temperature); Serial.println("C");
+        
+        dht.humidity().getEvent(&dht_event);
+        Serial.print("Humidity: "); Serial.print(dht_event.relative_humidity); Serial.println("%");
+    }
+    
+    delay(100);
+    loop_num++;
 }
 
 // very sussy
