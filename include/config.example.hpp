@@ -1,5 +1,6 @@
 #pragma once
 
+//this is the mockup values, you need to replace them with your own credentials and project-specific values
 namespace conf {
     const char SSID[] =             "";
     const char PASSWORD[] =         "";
@@ -8,6 +9,7 @@ namespace conf {
     const int SMTP_PORT =           465;                    // 465 for SSL, 587 for TLS
     const char SMTP_EMAIL[] =       "";
     const char SMTP_PASSWORD[] =    "";
+    const char SMTP_USERNAME[] =    "";
 
     const char SENDER_EMAIL[] =     "";
     const char NOTIFY_EMAIL[] =     "";
