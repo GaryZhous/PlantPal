@@ -10,8 +10,7 @@
     #endif 
 #endif 
 
-//#include "config.hpp"
-#include "config.example.hpp"
+#include "config.hpp"
 #include "util/mail.hpp"
 #include "util/relay.hpp"
 #include "util/led_symbols.hpp"
