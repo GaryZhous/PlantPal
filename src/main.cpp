@@ -11,12 +11,14 @@
     #endif 
 #endif */
 
-//#include "config.hpp"
-#include "config.example.hpp"
+#include "config.hpp"
+// #include "config.example.hpp"
 #include "util/mail.hpp"
 #include "util/relay.hpp"
 #include "util/led_symbols.hpp"
 #include "sensor/soil_moisture.hpp"
+#include "sensor/light.hpp"
+#include "sensor/motion.hpp"
 
 #define TEST
 ArduinoLEDMatrix matrix;
@@ -25,16 +27,13 @@ Mail mail(conf::SMTP_SERVER, conf::SMTP_PORT, conf::SMTP_USERNAME, conf::SMTP_PA
 Relay pump_relay(conf::RELAY_PIN);
 SoilMoistureSensor soil_moisture(conf::SOIL_MOISTURE_SENSOR_PIN);
 DHT_Unified dht(conf::DHT_SENSOR_PIN, DHT22);
-hp_BH1750 BH1750;
+LightSensor light_sensor;
+MotionSensor motion_sensor(conf::MOTION_SENSOR_PIN);
 
 void setup() {
     Serial.begin(115200);
     matrix.begin();
-    //start the BH1750 sensor
-    if(!BH1750.begin(BH1750_TO_GROUND)){
-        Serial.println("Light sensor is not found!");
-    }
-    Serial.println("conversion time: " + BH1750.getMtregTime());
+
     // Connect to WiFi
     WiFi.begin(conf::SSID, conf::PASSWORD);
     Serial.print("Connecting to WiFi...");
@@ -44,6 +43,7 @@ void setup() {
     }
     Serial.println("Connected!");
 
+    light_sensor.setup();
     pump_relay.setup();
     soil_moisture.setup();
     dht.begin();
@@ -77,17 +77,9 @@ void test_send() {
     }
 }
 
-int test_light(){
-    BH1750.start(); //start a measurement
-    if(BH1750.hasValue())
-        return BH1750.getLux();
-    return -1;
-}
-
-typedef int (*call_back)();
-
 int loop_num = 0;
-void test_sensors(call_back func){
+
+void loop() {
     double moisture = soil_moisture.read();
 
     if (moisture > conf::SOIL_DRY_THRESHOLD) {
@@ -110,20 +102,14 @@ void test_sensors(call_back func){
         
         dht.humidity().getEvent(&dht_event);
         Serial.print("Humidity: "); Serial.print(dht_event.relative_humidity); Serial.println("%");
+
+        float reading = light_sensor.read();
+        Serial.print("Lux: "); Serial.println(reading);
+
+        bool motion = motion_sensor.read();
+        Serial.print("Motion: "); Serial.println(motion);
     }
-    if(func() > 0){
-        //implement logic for light sensor
-    }
 
-}
-
-void loop() {
-    #ifdef TEST
-        // test_send();
-    #endif
-
-    test_sensors(&test_light);
-    
     delay(100);
     loop_num++;
 }
