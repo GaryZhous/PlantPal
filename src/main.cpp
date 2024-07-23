@@ -3,12 +3,13 @@
 #include <WiFi.h>
 #include <Arduino_LED_Matrix.h>
 #include <DHT_U.h>
+#include <hp_BH1750.h>
 
-#ifdef __has_include
+/*#ifdef __has_include
     #if !__has_include("config.hpp")
         #error "config.hpp not found, please copy from config.example.hpp and fill in!"
     #endif 
-#endif 
+#endif */
 
 //#include "config.hpp"
 #include "config.example.hpp"
@@ -24,11 +25,16 @@ Mail mail(conf::SMTP_SERVER, conf::SMTP_PORT, conf::SMTP_USERNAME, conf::SMTP_PA
 Relay pump_relay(conf::RELAY_PIN);
 SoilMoistureSensor soil_moisture(conf::SOIL_MOISTURE_SENSOR_PIN);
 DHT_Unified dht(conf::DHT_SENSOR_PIN, DHT22);
+hp_BH1750 BH1750;
 
 void setup() {
     Serial.begin(115200);
     matrix.begin();
-
+    //start the BH1750 sensor
+    if(!BH1750.begin(BH1750_TO_GROUND)){
+        Serial.println("Light sensor is not found!");
+    }
+    Serial.println("conversion time: " + BH1750.getMtregTime());
     // Connect to WiFi
     WiFi.begin(conf::SSID, conf::PASSWORD);
     Serial.print("Connecting to WiFi...");
@@ -71,12 +77,17 @@ void test_send() {
     }
 }
 
-int loop_num = 0;
-void loop() {
-    #ifdef TEST
-        // test_send();
-    #endif
+int test_light(){
+    BH1750.start(); //start a measurement
+    if(BH1750.hasValue())
+        return BH1750.getLux();
+    return -1;
+}
 
+typedef int (*call_back)();
+
+int loop_num = 0;
+void test_sensors(call_back func){
     double moisture = soil_moisture.read();
 
     if (moisture > conf::SOIL_DRY_THRESHOLD) {
@@ -100,6 +111,18 @@ void loop() {
         dht.humidity().getEvent(&dht_event);
         Serial.print("Humidity: "); Serial.print(dht_event.relative_humidity); Serial.println("%");
     }
+    if(func() > 0){
+        //implement logic for light sensor
+    }
+
+}
+
+void loop() {
+    #ifdef TEST
+        // test_send();
+    #endif
+
+    test_sensors(&test_light);
     
     delay(100);
     loop_num++;
