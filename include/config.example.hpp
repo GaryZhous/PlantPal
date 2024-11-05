@@ -2,17 +2,17 @@
 
 //this is the mockup values, you need to replace them with your own credentials and project-specific values
 namespace conf {
-    const char SSID[] =             "";
-    const char PASSWORD[] =         "";
+    const char SSID[] =             "<WIFI SSID HERE>";
+    const char PASSWORD[] =         "<WIFI PASSWORD HERE>";
 
 
     const char SMTP_SERVER[] =      "smtp.sendgrid.net";
     const int SMTP_PORT =           465;                    // 465 for SSL, 587 for TLS
     const char SMTP_USERNAME[] =    "apikey";
-    const char SMTP_PASSWORD[] =    "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";
+    const char SMTP_PASSWORD[] =    "<API KEY HERE>";
 
-    const char SENDER_EMAIL[] =     "project-terrarium@singularitysys.net";
-    const char NOTIFY_EMAIL[] =     "reaahuja21@gmail.com";
+    const char SENDER_EMAIL[] =     "<TERRARIUM EMAIL HERE>";
+    const char NOTIFY_EMAIL[] =     "<YOUR EMAIL HERE>";
 
     const int RELAY_PIN =                   2;
     const int SOIL_MOISTURE_SENSOR_PIN =    A0;
